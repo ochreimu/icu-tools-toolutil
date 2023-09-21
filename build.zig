@@ -11,6 +11,7 @@ pub fn build(b: *std.Build) !void {
     const can_generate_objects = b.option(bool, "canGenerateObjects", "Can generate objects") orelse false;
     const has_win32_api = builtin.os.tag == .windows;
     const platform_linux_based = builtin.os.tag == .linux;
+    const u_elf = builtin.os.tag == .linux;
 
     const lib = std.Build.Step.Compile.create(b, .{
         .name = lib_name,
@@ -48,6 +49,7 @@ pub fn build(b: *std.Build) !void {
     if (can_generate_objects) lib.defineCMacro("CAN_GENERATE_OBJECTS", null);
     if (has_win32_api) lib.defineCMacro("U_PLATFORM_HAS_WIN32_API", null);
     if (platform_linux_based) lib.defineCMacro("U_PLATFORM_IS_LINUX_BASED", null);
+    if (u_elf) lib.defineCMacro("U_ELF", null);
 
     lib.linkLibCpp();
     lib.defineCMacro("U_TOOLUTIL_IMPLEMENTATION", null);
