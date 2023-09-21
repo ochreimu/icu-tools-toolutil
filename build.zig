@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 
 pub fn build(b: *std.Build) !void {
     const Linkage = std.Build.Step.Compile.Linkage;
@@ -7,6 +8,9 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
     const linkage = b.option(Linkage, "linkage", "The linking mode for libraries") orelse .static;
     const lib_name = "icutu";
+    const can_generate_objects = b.option(bool, "canGenerateObjects", "Can generate objects") orelse false;
+    const has_win32_api = builtin.os.tag == .windows;
+    const platform_linux_based = builtin.os.tag == .linux;
 
     const lib = std.Build.Step.Compile.create(b, .{
         .name = lib_name,
@@ -39,6 +43,11 @@ pub fn build(b: *std.Build) !void {
     const icuuc_arg = std.mem.concat(b.allocator, u8, &.{ "-I", icuuc_root }) catch @panic("OOM");
     const icui18n_root = i18n.builder.pathFromRoot("cpp");
     const icui18n_arg = std.mem.concat(b.allocator, u8, &.{ "-I", icui18n_root }) catch @panic("OOM");
+
+    // Configuration
+    if (can_generate_objects) lib.defineCMacro("CAN_GENERATE_OBJECTS", null);
+    if (has_win32_api) lib.defineCMacro("U_PLATFORM_HAS_WIN32_API", null);
+    if (platform_linux_based) lib.defineCMacro("U_PLATFORM_IS_LINUX_BASED", null);
 
     lib.linkLibCpp();
     lib.defineCMacro("U_TOOLUTIL_IMPLEMENTATION", null);
